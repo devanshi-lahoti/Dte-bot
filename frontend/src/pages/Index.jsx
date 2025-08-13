@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import "@/styles/custom.css";
+import "@/styles/features.css";
 
 import { 
   GraduationCap, 
@@ -40,7 +41,7 @@ const Index = () => {
       icon: Award,
       title: "Scholarship Opportunities",
       description: "Explore various scholarships and financial aid options available for technical education",
-      color: "bg-warning"
+      color: "bg-secondary"
     },
     {
       icon: TrendingUp,
@@ -58,7 +59,7 @@ const Index = () => {
       icon: BookOpen,
       title: "Course Information",
       description: "Get comprehensive details about engineering courses, specializations, and curriculum",
-      color: "bg-muted"
+      color: "bg-primary"
     }
   ];
 
@@ -176,52 +177,52 @@ const Index = () => {
   </div>
 </section>
 
-        {/* Features Section */}
-        <section className="py-12 md:py-20 bg-muted/30 w-full">
-          <div className="max-w-screen-xl mx-auto w-full">
-            <div className="text-center mb-16 animate-slideInFromTop">
-              <Badge variant="secondary" className="mb-4">
-                <Target className="w-3 h-3 mr-1" />
-                Comprehensive Features
-              </Badge>
-              <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-6">
-                Everything You Need for Your Engineering Journey
-              </h2>
-              <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
-                From college selection to career guidance, our AI-powered platform provides 
-                comprehensive support for every step of your technical education journey.
+      {/* Features Section */}
+<section className="features-section">
+  <div className="features-container">
+    <div className="features-header">
+      <span className="features-badge">
+        <Target className="icon-small" />
+        Comprehensive Features
+      </span>
+      <h2 className="features-title">
+        Everything You Need for Your Engineering Journey
+      </h2>
+      <p className="features-subtitle">
+        From college selection to career guidance, our AI-powered platform provides 
+        comprehensive support for every step of your technical education journey.
+      </p>
+    </div>
+
+    <div className="features-grid">
+      {features.map((feature, index) => (
+        <Card 
+          key={index} 
+          className="feature-card"
+        >
+          <CardContent className="feature-card-content">
+            <div className={`feature-icon ${feature.color}`}>
+              <feature.icon className="icon-medium" />
+            </div>
+            <div>
+              <h3 className="feature-title">
+                {feature.title}
+              </h3>
+              <p className="feature-desc">
+                {feature.description}
               </p>
             </div>
-
-            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-              {features.map((feature, index) => (
-                <Card 
-                  key={index} 
-                  className="p-6 shadow-elevated border-0 hover:shadow-primary/10 transition-all duration-300 hover:-translate-y-2 group animate-slideInFromBottom"
-                >
-                  <CardContent className="p-0 space-y-4">
-                    <div className={`w-12 h-12 ${feature.color} rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform`}>
-                      <feature.icon className="w-6 h-6 text-white" />
-                    </div>
-                    <div className="space-y-2">
-                      <h3 className="text-xl font-semibold text-foreground group-hover:text-primary transition-colors">
-                        {feature.title}
-                      </h3>
-                      <p className="text-muted-foreground leading-relaxed">
-                        {feature.description}
-                      </p>
-                    </div>
-                    <div className="pt-2">
-                      <div className="flex items-center text-primary font-medium text-sm group-hover:translate-x-2 transition-transform">
-                        Learn More <ArrowRight className="w-4 h-4 ml-1" />
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
+            <div className="feature-link">
+              Learn More <ArrowRight className="icon-small ml-1" />
             </div>
-          </div>
-        </section>
+          </CardContent>
+        </Card>
+      ))}
+    </div>
+  </div>
+</section>
+
+
 
         {/* Footer */}
         <footer className="border-t bg-white/80 backdrop-blur-sm py-8 w-full">
