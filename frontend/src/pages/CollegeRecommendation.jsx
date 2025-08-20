@@ -12,15 +12,19 @@ import {
   MapPin, 
   Star, 
   TrendingUp, 
-  Users, 
+  Users,
   DollarSign,
   ArrowLeft,
   GraduationCap,
   Building,
   Award,
   Filter,
-  ChevronRight
+  ChevronRight,
+  ChevronDown
 } from "lucide-react";
+
+// Import the custom CSS
+import "../styles/college-recommendation.css";
 
 const CollegeRecommendation = () => {
   const [formData, setFormData] = useState({
@@ -111,304 +115,300 @@ const CollegeRecommendation = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-muted/30 to-background">
+    <div className="college-finder-container">
       {/* Header */}
-      <header className="border-b bg-white/80 backdrop-blur-sm sticky top-0 z-50">
-        <div className="container mx-auto px-4 py-4">
+      <header className="college-finder-header">
+        <div className="header-content">
           <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-3">
-              <Link to="/dashboard" className="text-muted-foreground hover:text-primary">
+            <div className="header-left">
+              <Link to="/dashboard" className="back-arrow">
                 <ArrowLeft className="w-5 h-5" />
               </Link>
-              <div className="w-10 h-10 bg-gradient-secondary rounded-xl flex items-center justify-center">
+              <div className="header-icon">
                 <Search className="w-5 h-5 text-white" />
               </div>
-              <div>
-                <h1 className="text-lg font-bold text-foreground">College Finder</h1>
-                <p className="text-xs text-muted-foreground">Find your perfect college match</p>
+              <div className="header-text">
+                <h1>College Finder</h1>
+                <p>Find your perfect college match</p>
               </div>
             </div>
-            <Badge variant="secondary">
-              <Filter className="w-3 h-3 mr-1" />
+            <div className="smart-recommendations">
               Smart Recommendations
-            </Badge>
+            </div>
           </div>
         </div>
       </header>
 
-      <div className="container mx-auto px-4 py-8">
-        <div className="grid lg:grid-cols-3 gap-8">
-          {/* Search Form */}
-          <div className="lg:col-span-1">
-            <Card className="shadow-elevated border-0 sticky top-24">
-              <CardHeader>
-                <CardTitle className="flex items-center">
-                  <Search className="w-5 h-5 mr-2 text-primary" />
-                  Find Your College
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-6">
-                {/* Marks */}
-                <div className="space-y-2">
-                  <Label>Academic Marks/Percentage</Label>
-                  <div className="px-3 py-2 bg-muted/30 rounded-lg">
-                    <Slider
-                      value={formData.marks}
-                      onValueChange={(value) => setFormData({ ...formData, marks: value })}
-                      max={100}
-                      min={40}
-                      step={1}
-                      className="w-full"
-                    />
-                    <div className="flex justify-between text-xs text-muted-foreground mt-2">
-                      <span>40%</span>
-                      <span className="font-medium text-primary">{formData.marks[0]}%</span>
-                      <span>100%</span>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Location */}
-                <div className="space-y-2">
-                  <Label>Preferred Location</Label>
-                  <Select value={formData.location} onValueChange={(value) => setFormData({ ...formData, location: value })}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select city" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {locations.map((location) => (
-                        <SelectItem key={location} value={location}>{location}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                {/* Stream */}
-                <div className="space-y-2">
-                  <Label>Engineering Stream</Label>
-                  <Select value={formData.stream} onValueChange={(value) => setFormData({ ...formData, stream: value })}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select stream" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {streams.map((stream) => (
-                        <SelectItem key={stream} value={stream}>{stream}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                {/* Budget */}
-                <div className="space-y-2">
-                  <Label>Annual Budget</Label>
-                  <div className="px-3 py-2 bg-muted/30 rounded-lg">
-                    <Slider
-                      value={formData.budget}
-                      onValueChange={(value) => setFormData({ ...formData, budget: value })}
-                      max={1000000}
-                      min={50000}
-                      step={25000}
-                      className="w-full"
-                    />
-                    <div className="flex justify-between text-xs text-muted-foreground mt-2">
-                      <span>₹50k</span>
-                      <span className="font-medium text-primary">{formatCurrency(formData.budget[0])}</span>
-                      <span>₹10L</span>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Course Type */}
-                <div className="space-y-2">
-                  <Label>Course Type</Label>
-                  <Select value={formData.courseType} onValueChange={(value) => setFormData({ ...formData, courseType: value })}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select course type" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="engineering">Engineering (B.Tech)</SelectItem>
-                      <SelectItem value="polytechnic">Polytechnic (Diploma)</SelectItem>
-                      <SelectItem value="postgraduate">Post Graduate (M.Tech)</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                {/* Additional Preferences */}
-                <div className="space-y-2">
-                  <Label>Additional Preferences (Optional)</Label>
-                  <Input
-                    placeholder="e.g., hostel facility, research opportunities..."
-                    value={formData.preferences}
-                    onChange={(e) => setFormData({ ...formData, preferences: e.target.value })}
+      <div className="main-content-grid">
+        {/* Left Sidebar - Filter Card */}
+        <div className="lg:col-span-1">
+          <Card className="filter-card">
+            <CardContent className="filter-card-content">
+              {/* Academic Marks/Percentage */}
+              <div className="filter-section">
+                <Label className="filter-label">Academic Marks/Percentage</Label>
+                <div className="marks-slider-container">
+                  <Slider
+                    value={formData.marks}
+                    onValueChange={(value) => setFormData({ ...formData, marks: value })}
+                    max={100}
+                    min={40}
+                    step={1}
+                    className="w-full"
                   />
+                  <div className="marks-slider-labels">
+                    <span className="marks-min">40%</span>
+                    <span className="marks-current">{formData.marks[0]}%</span>
+                    <span className="marks-max">100%</span>
+                  </div>
                 </div>
+              </div>
 
-                <Button onClick={handleSearch} className="w-full" size="lg" variant="gradient">
+              {/* Preferred Location */}
+              <div className="filter-section">
+                <Label className="filter-label">Preferred Location</Label>
+                <Select value={formData.location} onValueChange={(value) => setFormData({ ...formData, location: value })}>
+                  <SelectTrigger className="course-type-select">
+                    <SelectValue placeholder="Select city" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {locations.map((location) => (
+                      <SelectItem key={location} value={location}>{location}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {/* Engineering Stream */}
+              <div className="filter-section">
+                <Label className="filter-label">Engineering Stream</Label>
+                <Select value={formData.stream} onValueChange={(value) => setFormData({ ...formData, stream: value })}>
+                  <SelectTrigger className="course-type-select">
+                    <SelectValue placeholder="Select stream" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {streams.map((stream) => (
+                      <SelectItem key={stream} value={stream}>{stream}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {/* Annual Budget */}
+              <div className="filter-section">
+                <Label className="filter-label">Annual Budget</Label>
+                <div className="budget-slider-container">
+                  <Slider
+                    value={formData.budget}
+                    onValueChange={(value) => setFormData({ ...formData, budget: value })}
+                    max={1000000}
+                    min={50000}
+                    step={25000}
+                    className="w-full"
+                  />
+                  <div className="budget-slider-labels">
+                    <span className="budget-min">₹50k</span>
+                    <span className="budget-current">{formatCurrency(formData.budget[0])}</span>
+                    <span className="budget-max">₹10L</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Course Type */}
+              <div className="filter-section">
+                <Label className="filter-label">Course Type</Label>
+                <Select value={formData.courseType} onValueChange={(value) => setFormData({ ...formData, courseType: value })}>
+                  <SelectTrigger className="course-type-select">
+                    <SelectValue placeholder="Select course type" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="engineering">Engineering (B.Tech)</SelectItem>
+                    <SelectItem value="polytechnic">Polytechnic (Diploma)</SelectItem>
+                    <SelectItem value="postgraduate">Post Graduate (M.Tech)</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {/* Additional Preferences (Optional) */}
+              <div className="filter-section">
+                <Label className="filter-label">Additional Preferences (Optional)</Label>
+                <Input
+                  placeholder="e.g., hostel facility, research opportunities..."
+                  value={formData.preferences}
+                  onChange={(e) => setFormData({ ...formData, preferences: e.target.value })}
+                  className="filter-input"
+                />
+              </div>
+
+              {/* Search Button */}
+              <div className="filter-section">
+                <Button onClick={handleSearch} className="search-button" size="lg">
                   <Search className="w-4 h-4 mr-2" />
                   Find Colleges
                 </Button>
-              </CardContent>
-            </Card>
-          </div>
-
-          {/* Results */}
-          <div className="lg:col-span-2">
-            {!showResults ? (
-              <div className="text-center py-20">
-                <div className="w-20 h-20 bg-gradient-secondary rounded-2xl flex items-center justify-center mx-auto mb-6">
-                  <Search className="w-10 h-10 text-white" />
-                </div>
-                <h2 className="text-2xl font-bold text-foreground mb-4">Find Your Perfect College</h2>
-                <p className="text-muted-foreground mb-8 max-w-md mx-auto">
-                  Fill in your preferences and academic details to get personalized college recommendations.
-                </p>
-                <div className="grid md:grid-cols-3 gap-4 max-w-2xl mx-auto">
-                  <Card className="p-4 shadow-card border-0">
-                    <div className="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center mx-auto mb-3">
-                      <GraduationCap className="w-6 h-6 text-primary" />
-                    </div>
-                    <h3 className="font-semibold text-sm">Academic Match</h3>
-                    <p className="text-xs text-muted-foreground">Based on your marks</p>
-                  </Card>
-                  <Card className="p-4 shadow-card border-0">
-                    <div className="w-12 h-12 bg-secondary/10 rounded-lg flex items-center justify-center mx-auto mb-3">
-                      <MapPin className="w-6 h-6 text-secondary" />
-                    </div>
-                    <h3 className="font-semibold text-sm">Location Filter</h3>
-                    <p className="text-xs text-muted-foreground">Preferred cities</p>
-                  </Card>
-                  <Card className="p-4 shadow-card border-0">
-                    <div className="w-12 h-12 bg-accent/10 rounded-lg flex items-center justify-center mx-auto mb-3">
-                      <DollarSign className="w-6 h-6 text-accent" />
-                    </div>
-                    <h3 className="font-semibold text-sm">Budget Friendly</h3>
-                    <p className="text-xs text-muted-foreground">Within your range</p>
-                  </Card>
-                </div>
               </div>
-            ) : (
-              <div className="space-y-6">
-                <div className="flex items-center justify-between">
-                  <h2 className="text-2xl font-bold text-foreground">
-                    Recommended Colleges ({filteredColleges.length})
-                  </h2>
-                  <Badge variant="secondary">
-                    {formData.marks[0]}% Marks • {formData.location || "All Locations"}
-                  </Badge>
-                </div>
+            </CardContent>
+          </Card>
+        </div>
 
-                {filteredColleges.length === 0 ? (
-                  <Card className="p-8 text-center shadow-card border-0">
-                    <div className="w-16 h-16 bg-muted rounded-2xl flex items-center justify-center mx-auto mb-4">
-                      <Search className="w-8 h-8 text-muted-foreground" />
-                    </div>
-                    <h3 className="text-lg font-semibold text-foreground mb-2">No colleges found</h3>
-                    <p className="text-muted-foreground mb-4">
-                      Try adjusting your filters or budget to see more options.
-                    </p>
-                    <Button variant="outline" onClick={() => setShowResults(false)}>
-                      Modify Search
-                    </Button>
-                  </Card>
-                ) : (
-                  <div className="space-y-4">
-                    {filteredColleges.map((college) => (
-                      <Card key={college.id} className="p-6 shadow-elevated border-0 hover:shadow-primary/10 transition-all duration-300 hover:-translate-y-1">
-                        <div className="flex gap-6">
-                          <img 
-                            src={college.image} 
-                            alt={college.name}
-                            className="w-24 h-24 rounded-xl object-cover"
-                          />
-                          
-                          <div className="flex-1 space-y-3">
-                            <div className="flex items-start justify-between">
-                              <div>
-                                <h3 className="text-xl font-bold text-foreground">{college.name}</h3>
-                                <div className="flex items-center space-x-4 text-sm text-muted-foreground mt-1">
-                                  <div className="flex items-center">
-                                    <MapPin className="w-4 h-4 mr-1" />
-                                    {college.location}
-                                  </div>
-                                  <div className="flex items-center">
-                                    <Building className="w-4 h-4 mr-1" />
-                                    {college.type}
-                                  </div>
-                                  <div className="flex items-center">
-                                    <Star className="w-4 h-4 mr-1 text-warning" />
-                                    {college.rating}
-                                  </div>
+        {/* Right Main Content Area */}
+        <div className="lg:col-span-2">
+          {!showResults ? (
+            <div className="main-content-area">
+              <h2 className="main-heading">Find Your Perfect College</h2>
+              <p className="main-description">
+                Fill in your preferences and academic details to get personalized college recommendations.
+              </p>
+              
+              {/* Feature Cards - Stacked Vertically */}
+              <div className="feature-cards-container">
+                <Card className="feature-card">
+                  <div className="feature-icon academic">
+                    <GraduationCap className="w-6 h-6" />
+                  </div>
+                  <h3 className="feature-title">Academic Match</h3>
+                  <p className="feature-subtitle">Based on your marks</p>
+                </Card>
+                
+                <Card className="feature-card">
+                  <div className="feature-icon location">
+                    <MapPin className="w-6 h-6" />
+                  </div>
+                  <h3 className="feature-title">Location Filter</h3>
+                  <p className="feature-subtitle">Preferred cities</p>
+                </Card>
+                
+                <Card className="feature-card">
+                  <div className="feature-icon budget">
+                    <DollarSign className="w-6 h-6" />
+                  </div>
+                  <h3 className="feature-title">Budget Friendly</h3>
+                  <p className="feature-subtitle">Within your range</p>
+                </Card>
+              </div>
+            </div>
+          ) : (
+            <div className="search-results">
+              <div className="results-header">
+                <h2 className="results-title">
+                  Recommended Colleges ({filteredColleges.length})
+                </h2>
+                <Badge variant="secondary" className="results-badge">
+                  {formData.marks[0]}% Marks • {formData.location || "All Locations"}
+                </Badge>
+              </div>
+
+              {filteredColleges.length === 0 ? (
+                <Card className="no-results-card">
+                  <div className="no-results-icon">
+                    <Search className="w-8 h-8" />
+                  </div>
+                  <h3 className="no-results-title">No colleges found</h3>
+                  <p className="no-results-description">
+                    Try adjusting your filters or budget to see more options.
+                  </p>
+                  <Button variant="outline" onClick={() => setShowResults(false)}>
+                    Modify Search
+                  </Button>
+                </Card>
+              ) : (
+                <div className="space-y-4">
+                  {filteredColleges.map((college) => (
+                    <Card key={college.id} className="college-card">
+                      <div className="college-content">
+                        <img 
+                          src={college.image} 
+                          alt={college.name}
+                          className="college-image"
+                        />
+                        
+                        <div className="college-details">
+                          <div className="college-header">
+                            <div>
+                              <h3 className="college-name">{college.name}</h3>
+                              <div className="college-meta">
+                                <div className="college-meta-item">
+                                  <MapPin className="w-4 h-4 mr-1" />
+                                  {college.location}
+                                </div>
+                                <div className="college-meta-item">
+                                  <Building className="w-4 h-4 mr-1" />
+                                  {college.type}
+                                </div>
+                                <div className="college-meta-item rating">
+                                  <Star className="w-4 h-4 mr-1" />
+                                  {college.rating}
                                 </div>
                               </div>
-                              <Badge variant={college.type === "Government" ? "secondary" : "outline"}>
-                                Est. {college.established}
-                              </Badge>
                             </div>
+                            <Badge variant={college.type === "Government" ? "secondary" : "outline"} className="college-established">
+                              Est. {college.established}
+                            </Badge>
+                          </div>
 
-                            <div className="grid md:grid-cols-3 gap-4">
-                              <div className="flex items-center space-x-2">
-                                <div className="w-8 h-8 bg-success/10 rounded-lg flex items-center justify-center">
-                                  <DollarSign className="w-4 h-4 text-success" />
-                                </div>
-                                <div>
-                                  <div className="text-sm font-medium">{formatCurrency(college.fees.min)} - {formatCurrency(college.fees.max)}</div>
-                                  <div className="text-xs text-muted-foreground">Annual Fees</div>
-                                </div>
+                          <div className="college-stats">
+                            <div className="stat-item">
+                              <div className="stat-icon fees">
+                                <DollarSign className="w-4 h-4" />
                               </div>
-                              
-                              <div className="flex items-center space-x-2">
-                                <div className="w-8 h-8 bg-primary/10 rounded-lg flex items-center justify-center">
-                                  <TrendingUp className="w-4 h-4 text-primary" />
-                                </div>
-                                <div>
-                                  <div className="text-sm font-medium">{formatCurrency(college.placements.average)}</div>
-                                  <div className="text-xs text-muted-foreground">Avg. Package</div>
-                                </div>
-                              </div>
-                              
-                              <div className="flex items-center space-x-2">
-                                <div className="w-8 h-8 bg-warning/10 rounded-lg flex items-center justify-center">
-                                  <Users className="w-4 h-4 text-warning" />
-                                </div>
-                                <div>
-                                  <div className="text-sm font-medium">{college.placements.percentage}%</div>
-                                  <div className="text-xs text-muted-foreground">Placement Rate</div>
-                                </div>
+                              <div className="stat-content">
+                                <div className="stat-value">{formatCurrency(college.fees.min)} - {formatCurrency(college.fees.max)}</div>
+                                <div className="stat-label">Annual Fees</div>
                               </div>
                             </div>
-
-                            <div className="space-y-2">
-                              <div className="flex flex-wrap gap-2">
-                                {college.courses.slice(0, 3).map((course, i) => (
-                                  <Badge key={i} variant="outline" className="text-xs">
-                                    {course}
-                                  </Badge>
-                                ))}
+                            
+                            <div className="stat-item">
+                              <div className="stat-icon placement">
+                                <TrendingUp className="w-4 h-4" />
                               </div>
-                              
-                              <div className="flex items-center justify-between">
-                                <div className="flex flex-wrap gap-1">
-                                  {college.specializations.slice(0, 3).map((spec, i) => (
-                                    <Badge key={i} variant="secondary" className="text-xs bg-accent/10 text-accent">
-                                      {spec}
-                                    </Badge>
-                                  ))}
-                                </div>
-                                <Button variant="outline" size="sm">
-                                  View Details
-                                  <ChevronRight className="w-3 h-3 ml-1" />
-                                </Button>
+                              <div className="stat-content">
+                                <div className="stat-value">{formatCurrency(college.placements.average)}</div>
+                                <div className="stat-label">Avg. Package</div>
+                              </div>
+                            </div>
+                            
+                            <div className="stat-item">
+                              <div className="stat-icon rate">
+                                <Users className="w-4 h-4" />
+                              </div>
+                              <div className="stat-content">
+                                <div className="stat-value">{college.placements.percentage}%</div>
+                                <div className="stat-label">Placement Rate</div>
                               </div>
                             </div>
                           </div>
+
+                          <div className="college-tags">
+                            <div className="course-tags">
+                              {college.courses.slice(0, 3).map((course, i) => (
+                                <Badge key={i} variant="outline" className="course-tag">
+                                  {course}
+                                </Badge>
+                              ))}
+                            </div>
+                            
+                            <div className="flex items-center justify-between">
+                              <div className="specialization-tags">
+                                {college.specializations.slice(0, 3).map((spec, i) => (
+                                  <Badge key={i} variant="secondary" className="specialization-tag">
+                                    {spec}
+                                  </Badge>
+                                ))}
+                              </div>
+                              <Button variant="outline" size="sm" className="view-details-btn">
+                                View Details
+                                <ChevronRight className="w-3 h-3 ml-1" />
+                              </Button>
+                            </div>
+                          </div>
                         </div>
-                      </Card>
-                    ))}
-                  </div>
-                )}
-              </div>
-            )}
-          </div>
+                      </div>
+                    </Card>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
         </div>
       </div>
     </div>
