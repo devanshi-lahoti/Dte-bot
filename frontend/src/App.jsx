@@ -19,6 +19,9 @@ import AdmissionFees from "./pages/AdmissionFees";
 import ScholarshipsPlacement from "./pages/ScholarshipsPlacement";
 import QueryHistory from "./pages/QueryHistory";
 import NotFound from "./pages/NotFound";
+import ProtectedDashboard from "./pages/ProtectedDashboard";
+
+
 
 const queryClient = new QueryClient();
 
@@ -26,9 +29,10 @@ function App() {
   const [count, setCount] = useState(0);
 
   return (
+    
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
-        <Toaster />
+       
         <Sonner />
         <BrowserRouter>
           <Routes>
@@ -42,18 +46,26 @@ function App() {
               }
             />
             <Route path="/login" element={<Login />} />
-            <Route path="/dashboard" element={<Dashboard />} />
+            <Route path="/dashboard" element={<ProtectedDashboard />} />
             <Route path="/chat" element={<ChatInterface />} />
             <Route path="/college-finder" element={<CollegeRecommendation />} />
             <Route path="/admission-fees" element={<AdmissionFees />} />
             <Route path="/scholarships-placement" element={<ScholarshipsPlacement />} />
             <Route path="/query-history" element={<QueryHistory />} />
             <Route path="*" element={<NotFound />} />
+            
+
+
           </Routes>
+           <Toaster />
         </BrowserRouter>
       </TooltipProvider>
     </QueryClientProvider>
   );
+
+  
 }
+
+
 
 export default App;

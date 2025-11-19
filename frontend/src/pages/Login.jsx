@@ -1,28 +1,93 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { GraduationCap, Mail, Lock, Eye, EyeOff, ArrowLeft, Users, UserCheck, Shield } from "lucide-react";
 import "@/styles/login.css";
+//import api from "@/api/axios"; // ✅ added
+import api from "../api/axios";
+import { toast } from "sonner";
+import { User } from "lucide-react";
+
+
+
 
 const Login = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [selectedRole, setSelectedRole] = useState("student");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [signupData, setSignupData] = useState({
+    firstName: "",
+    lastName: "",
+    role:"",
+    email: "",
+    password: "",
+  });
+
+  const navigate = useNavigate();
 
   const roles = [
-    { id: "student", label: "Student", icon: GraduationCap, description: "Current or prospective student" },
-    { id: "parent", label: "Parent", icon: Users, description: "Parent/Guardian of student" },
-    { id: "admin", label: "Admin", icon: Shield, description: "College/DTE administrator" },
+    { id: "STUDENT", label: "Student", icon: GraduationCap, description: "Current or prospective student" },
+    { id: "PARENT", label: "Parent", icon: Users, description: "Parent/Guardian of student" },
+    { id: "ADMIN", label: "Admin", icon: Shield, description: "College/DTE administrator" },
   ];
+
+  // ✅ Handle login
+const handleLogin = async (e) => {
+  e.preventDefault();
+  try {
+    const res = await api.post("/app/login", {
+      email,
+      password,
+      role: selectedRole.toUpperCase(), // backend expects uppercase
+    });
+
+    const { status, msg, data } = res.data;
+
+    if (status && data?.token) {
+      const { firstName, role, token } = data;
+
+      // 🟩 Save all details properly
+      localStorage.setItem("token", token);
+      localStorage.setItem("role", role);
+      localStorage.setItem("user", JSON.stringify({ firstName, role, token }));
+
+      toast.success(msg || "Login successful!");
+      navigate("/dashboard");
+    } else {
+      toast.error(msg || "Login failed");
+    }
+  } catch (err) {
+    console.error(err);
+    toast.error(err.response?.data?.message || "Login failed");
+  }
+};
+
+// ✅ Handle signup
+const handleSignup = async (e) => {
+  e.preventDefault();
+  try {
+    const res = await api.post("/app/register", signupData);
+    console.log("Signup Response:", res.data);
+
+    if (res.data.status) {
+      toast.success(res.data.msg || "Account created! Please sign in.");
+    } else {
+      toast.error(res.data.msg || "Signup failed");
+    }
+  } catch (err) {
+    toast.error("Signup failed. Please try again.");
+  }
+};
+
 
   return (
     <div className="login-page">
       <div className="login-container">
-        
-        {/* Card wrapper */}
         <Card className="login-card">
           <div className="login-header">
             <Link to="/" className="inline-flex items-center text-gray-500 hover:text-primary mb-4">
@@ -42,7 +107,7 @@ const Login = () => {
                 <TabsTrigger value="signup" className="tabs-trigger flex-1">Sign Up</TabsTrigger>
               </TabsList>
 
-              {/* Sign In Form */}
+              {/* Sign In */}
               <TabsContent value="signin" className="space-y-6 mt-6">
                 <div className="role-selection">
                   <h3>Select Your Role</h3>
@@ -52,7 +117,7 @@ const Login = () => {
                         key={role.id}
                         type="button"
                         onClick={() => setSelectedRole(role.id)}
-                        className={`role-button ${selectedRole === role.id ? 'selected' : ''}`}
+                        className={`role-button ${selectedRole === role.id ? "selected" : ""}`}
                       >
                         <div className="role-content">
                           <role.icon className="role-icon" />
@@ -67,15 +132,22 @@ const Login = () => {
                   </div>
                 </div>
 
-                <form className="form-section">
+                <form className="form-section" onSubmit={handleLogin}>
                   <div className="form-group">
                     <Label className="form-label">Email Address</Label>
                     <div className="form-input">
                       <Mail className="icon" />
-                      <Input id="email" type="email" placeholder="your.email@example.com" />
+                      <Input
+                        id="email"
+                        type="email"
+                        placeholder="your.email@example.com"
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                        required
+                      />
                     </div>
                   </div>
-                  
+
                   <div className="form-group">
                     <Label className="form-label">Password</Label>
                     <div className="form-input">
@@ -84,6 +156,9 @@ const Login = () => {
                         id="password"
                         type={showPassword ? "text" : "password"}
                         placeholder="Enter your password"
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                        required
                       />
                       <button
                         type="button"
@@ -94,38 +169,62 @@ const Login = () => {
                       </button>
                     </div>
                   </div>
-                  
-                  <Button className="submit-button" variant="gradient">Sign In</Button>
+
+                  <Button className="submit-button" variant="gradient" type="submit">
+                    Sign In
+                  </Button>
                 </form>
               </TabsContent>
 
-              {/* Sign Up Form */}
+              {/* Sign Up */}
               <TabsContent value="signup" className="space-y-6 mt-6">
-                <form className="form-section">
+                <form className="form-section" onSubmit={handleSignup}>
                   <div className="grid grid-cols-2 gap-4">
                     <div className="form-group">
                       <Label className="form-label">First Name</Label>
                       <div className="form-input">
-                        <Input id="firstName" placeholder="John" />
+                        <Input
+                          id="firstName"
+                          placeholder="Enter first name"
+                          value={signupData.firstName}
+                          onChange={(e) => setSignupData({ ...signupData, firstName: e.target.value })}
+                          required
+                        />
                       </div>
                     </div>
-                    
+
                     <div className="form-group">
                       <Label className="form-label">Last Name</Label>
                       <div className="form-input">
-                        <Input id="lastName" placeholder="Doe" />
+                        <Input
+                          id="lastName"
+                          placeholder="Enter last name"
+                          value={signupData.lastName}
+                          onChange={(e) => setSignupData({ ...signupData, lastName: e.target.value })}
+                          required
+                        />
                       </div>
                     </div>
                   </div>
-                  
+ 
+                   
+
+
                   <div className="form-group">
                     <Label className="form-label">Email Address</Label>
                     <div className="form-input">
                       <Mail className="icon" />
-                      <Input id="signupEmail" type="email" placeholder="your.email@example.com" />
+                      <Input
+                        id="signupEmail"
+                        type="email"
+                        placeholder="your.email@example.com"
+                        value={signupData.email}
+                        onChange={(e) => setSignupData({ ...signupData, email: e.target.value })}
+                        required
+                      />
                     </div>
                   </div>
-                  
+
                   <div className="form-group">
                     <Label className="form-label">Password</Label>
                     <div className="form-input">
@@ -134,22 +233,44 @@ const Login = () => {
                         id="signupPassword"
                         type="password"
                         placeholder="Create a strong password"
+                        value={signupData.password}
+                        onChange={(e) => setSignupData({ ...signupData, password: e.target.value })}
+                        required
                       />
                     </div>
                   </div>
 
-                  <div className="text-xs text-muted-foreground text-center">
-                    By creating an account, you agree to our{" "}
-                    <a href="#" className="text-primary hover:underline">Terms of Service</a> and{" "}
-                    <a href="#" className="text-primary hover:underline">Privacy Policy</a>.
-                  </div>
+                  <div className="form-group">
+                           <Label className="form-label">Role</Label>
+                         <div className="form-input relative">
+                             
+                            <select
+                              id="role"
+                              name="role"
+                              value={signupData.role}
+                              onChange={(e) => setSignupData({ ...signupData, role: e.target.value })}
+                              required
+                              className={`w-full pl-10 pr-4 py-2 rounded-md border border-gray-300 
+                                    focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 bg-white 
+                                    appearance-none text-gray-700 
+                                      ${signupData.role === "" ? "text-gray-400" : "text-gray-700"}`}
+                                  >
 
-                  <Button className="submit-button" variant="gradient">
+                              <option value=""disabled hidden>Select Role</option>
+                              <option value="PARENT">Parent</option>
+                              <option value="STUDENT">Student</option>
+                            </select>
+                             
+                              
+                            
+                          </div>
+                    </div>
+
+                  <Button className="submit-button" variant="gradient" type="submit">
                     Create Account
                   </Button>
                 </form>
               </TabsContent>
-
             </Tabs>
           </div>
         </Card>

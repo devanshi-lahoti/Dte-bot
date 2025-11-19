@@ -1,4 +1,6 @@
-import { Link } from "react-router-dom";
+import React from "react";
+import { Link, useNavigate } from "react-router-dom";
+
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -21,7 +23,37 @@ import {
 } from "lucide-react";
 
 const Dashboard = () => {
-  const services = [
+  const role = localStorage.getItem("role") || "STUDENT"; // default to STUDENT if missing
+
+ const navigate = useNavigate();
+
+const handleLogout = () => {
+  localStorage.removeItem("token");
+  localStorage.removeItem("role");
+  localStorage.removeItem("user");
+  navigate("/login");
+};
+
+  
+  
+  // 🟩 Get user info from localStorage
+  const storedUser = localStorage.getItem("user");
+  let userName = "User";
+  let userRole = role;
+  
+
+  try {
+    if (storedUser) {
+      const parsed = JSON.parse(storedUser);
+      if (parsed.firstName) userName = parsed.firstName;
+      if (parsed.role) userRole = parsed.role;
+    }
+  } catch (err) {
+    console.error("Error parsing stored user:", err);
+  }
+
+  // ✅ Base services for student/parent
+  const commonServices = [
     {
       title: "Start Chat",
       description: "Get instant answers from our AI assistant",
@@ -88,6 +120,37 @@ const Dashboard = () => {
     },
   ];
 
+  // ✅ Admin-specific services (optional)
+  const adminServices = [
+    {
+      title: "Manage Users",
+      description: "View and manage all registered users",
+      icon: Users,
+      color: "bg-primary",
+      link: "#",
+      badge: "Admin"
+    },
+    {
+      title: "System Analytics",
+      description: "Monitor app usage and performance",
+      icon: TrendingUp,
+      color: "bg-success",
+      link: "#",
+      badge: "Reports"
+    },
+    {
+      title: "Chat Overview",
+      description: "View overall chat statistics",
+      icon: MessageSquare,
+      color: "bg-warning",
+      link: "#",
+      badge: "Admin"
+    },
+  ];
+
+  // ✅ Choose services dynamically
+  const services = role === "ADMIN" ? adminServices : commonServices;
+
   const recentActivity = [
     { type: "chat", title: "Asked about MBA admission criteria", time: "2 hours ago" },
     { type: "search", title: "Searched for engineering colleges in Pune", time: "1 day ago" },
@@ -101,6 +164,7 @@ const Dashboard = () => {
   ];
 
   return (
+    
     <div className="min-h-screen bg-gradient-to-br from-background via-muted/30 to-background">
       {/* Header */}
       <header className="border-b bg-white/80 backdrop-blur-sm sticky top-0 z-50">
@@ -122,11 +186,15 @@ const Dashboard = () => {
               <Button variant="ghost" size="sm">
                 <Settings className="w-4 h-4" />
               </Button>
-              <Link to="/">
-                <Button variant="ghost" size="sm">
-                  <LogOut className="w-4 h-4" />
-                </Button>
-              </Link>
+              <Button 
+  variant="ghost" 
+  size="sm" 
+  onClick={handleLogout}
+  title="Logout"
+>
+  <LogOut className="w-4 h-4" />
+</Button>
+
             </div>
           </div>
         </div>
@@ -137,17 +205,16 @@ const Dashboard = () => {
         <div className="mb-8">
           <div className="flex items-center justify-between mb-4">
             <div>
-              <h1 className="text-3xl font-bold text-foreground mb-2">Welcome back, Priya! 👋</h1>
-              <p className="text-muted-foreground">
-                Ready to continue your educational journey? Let's help you find what you need.
-              </p>
+            <h1>Hello, {userName}!</h1>
+              <p>Welcome to your {userRole} dashboard.</p>
+
             </div>
-            <Badge variant="secondary" className="hidden md:flex">
+            <Badge variant="secondary" className="hidden md:flex capitalize">
               <Users className="w-3 h-3 mr-1" />
-              Student
+              {role.charAt(0) + role.slice(1).toLowerCase()}
             </Badge>
           </div>
-          
+
           {/* Quick Stats */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
             <Card className="p-4 shadow-card border-0">
@@ -231,6 +298,7 @@ const Dashboard = () => {
           </div>
 
           {/* Sidebar */}
+          {/* (unchanged below) */}
           <div className="space-y-6">
             {/* Recent Activity */}
             <Card className="shadow-card border-0">
@@ -276,10 +344,15 @@ const Dashboard = () => {
                         <p className="text-sm font-medium text-foreground">{notification.title}</p>
                         <p className="text-xs text-muted-foreground">{notification.time}</p>
                       </div>
-                      <div className={`w-2 h-2 rounded-full flex-shrink-0 mt-2 ${
-                        notification.type === "info" ? "bg-primary" :
-                        notification.type === "warning" ? "bg-warning" : "bg-destructive"
-                      }`} />
+                      <div
+                        className={`w-2 h-2 rounded-full flex-shrink-0 mt-2 ${
+                          notification.type === "info"
+                            ? "bg-primary"
+                            : notification.type === "warning"
+                            ? "bg-warning"
+                            : "bg-destructive"
+                        }`}
+                      />
                     </div>
                   </div>
                 ))}

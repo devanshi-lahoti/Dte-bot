@@ -5,6 +5,8 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { useNavigate } from "react-router-dom";
+
 import { 
   Send, 
   Paperclip, 
@@ -23,6 +25,7 @@ import {
   Lightbulb
 } from "lucide-react";
 
+
 const ChatInterface = () => {
   const [messages, setMessages] = useState([
     {
@@ -32,10 +35,33 @@ const ChatInterface = () => {
       timestamp: new Date()
     }
   ]);
-  
+  const isLoggedIn = !!localStorage.getItem("token"); // true if user logged in
+
+  const navigate = useNavigate();
+const token = localStorage.getItem("token"); // check if user is logged in
+
+
   const [inputMessage, setInputMessage] = useState("");
   const messagesEndRef = useRef(null);
   const fileInputRef = useRef(null);
+
+  const handleLogout = () => {
+  localStorage.removeItem("token");
+  localStorage.removeItem("role");
+  localStorage.removeItem("user");
+
+  setMessages([
+    {
+      id: "1",
+      type: "bot",
+      content: "Hello! I'm your DTE AI Assistant. You can chat as guest or log in.",
+      timestamp: new Date()
+    }
+  ]);
+
+  navigate("/login"); // Make sure `useNavigate` is imported from react-router-dom
+};
+
 
   const categories = [
     { id: "admission", label: "Admission Process", icon: GraduationCap, color: "bg-primary" },
@@ -58,30 +84,80 @@ const ChatInterface = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
-  const handleSendMessage = () => {
-    if (!inputMessage.trim()) return;
+ const handleSendMessage = async () => {
+  if (!inputMessage.trim()) return;
 
-    const userMessage = {
-      id: Date.now().toString(),
-      type: "user",
-      content: inputMessage,
+  const userMessage = {
+    id: Date.now().toString(),
+    type: "user",
+    content: inputMessage,
+    timestamp: new Date()
+  };
+
+  setMessages(prev => [...prev, userMessage]);
+  setInputMessage("");
+
+  // Typing indicator
+  const typingMessage = {
+    id: "typing",
+    type: "bot",
+    content: "Typing...",
+    timestamp: new Date()
+  };
+  setMessages(prev => [...prev, typingMessage]);
+
+  try {
+    const token = localStorage.getItem("token") || undefined;
+
+    const response = await fetch("http://localhost:8080/api/chat", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        ...(token && { Authorization: `Bearer ${token}` })
+      },
+      body: JSON.stringify({ message: userMessage.content })
+    });
+
+    // Remove typing
+    setMessages(prev => prev.filter(msg => msg.id !== "typing"));
+
+    if (!response.ok) {
+      throw new Error("Network response not ok");
+    }
+
+    const data = await response.json();
+
+    const botMessage = {
+      id: Date.now().toString() + "_bot",
+      type: "bot",
+      content: data.reply || "I couldn't understand that.",
       timestamp: new Date()
     };
 
-    setMessages(prev => [...prev, userMessage]);
-    setInputMessage("");
+    setMessages(prev => [...prev, botMessage]);
 
-    // Simulate bot response
-    setTimeout(() => {
-      const botMessage = {
-        id: (Date.now() + 1).toString(),
+  } catch (err) {
+    console.error(err);
+
+    setMessages(prev => prev.filter(msg => msg.id !== "typing"));
+
+    setMessages(prev => [
+      ...prev,
+      {
+        id: Date.now().toString() + "_error",
         type: "bot",
-        content: getBotResponse(inputMessage),
+        content: "Sorry, something went wrong. Please try again.",
         timestamp: new Date()
-      };
-      setMessages(prev => [...prev, botMessage]);
-    }, 1000);
-  };
+      }
+    ]);
+  }
+};
+
+
+
+  
+
+    
 
   const getBotResponse = (userInput) => {
     const input = userInput.toLowerCase();
@@ -127,11 +203,43 @@ const ChatInterface = () => {
         {/* Sidebar Header */}
         <div className="p-4 border-b">
           <div className="flex items-center justify-between mb-4">
-            <Link to="/dashboard" className="flex items-center text-muted-foreground hover:text-primary">
-              <ArrowLeft className="w-4 h-4 mr-2" />
-              Back to Dashboard
-            </Link>
+                {isLoggedIn && (
+                <Link to="/dashboard" className="flex items-center text-muted-foreground hover:text-primary">
+                <ArrowLeft className="w-4 h-4 mr-2" />
+                   Back to Dashboard
+                </Link>
+                )}
+
+                 <div className="p-4 border-t mt-auto">
+  {localStorage.getItem("token") ? (
+    <Button 
+      onClick={handleLogout}
+      >
+      Log Out
+    </Button>
+  ) : (
+    <Button
+      onClick={() => {
+        setMessages([
+          {
+            id: "1",
+            type: "bot",
+            content: "Hello! I'm your DTE AI Assistant. You can chat as guest or log in.",
+            timestamp: new Date()
+          }
+        ]);
+      }}
+      variant="outline"
+      className="w-full"
+    >
+      Reset Guest
+    </Button>
+  )}
+</div>
           </div>
+
+          
+
           
           <div className="flex items-center space-x-3">
             <div className="w-10 h-10 bg-gradient-primary rounded-xl flex items-center justify-center">
@@ -142,6 +250,12 @@ const ChatInterface = () => {
               <p className="text-xs text-muted-foreground">Online and ready to help</p>
             </div>
           </div>
+
+          
+
+         
+
+          
         </div>
 
         {/* Categories */}
@@ -186,109 +300,115 @@ const ChatInterface = () => {
       {/* Main Chat Area */}
       <div className="flex-1 flex flex-col">
         {/* Chat Header */}
-        <div className="p-4 border-b bg-white/80 backdrop-blur-sm">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-3">
-              <div className="w-8 h-8 bg-gradient-primary rounded-lg flex items-center justify-center">
-                <MessageSquare className="w-4 h-4 text-white" />
-              </div>
-              <div>
-                <h2 className="font-semibold text-foreground">DTE AI Assistant</h2>
-                <p className="text-xs text-muted-foreground">Ask me anything about technical education</p>
-              </div>
+        {token ? (
+    <>
+      {/* Chat Header */}
+      <div className="space-y-4 max-w-5xl mx-auto">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center space-x-3">
+            <div className="w-8 h-8 bg-gradient-primary rounded-lg flex items-center justify-center">
+              <MessageSquare className="w-7 h-6 text-white" />
             </div>
-            <Badge variant="secondary" className="bg-success/10 text-success border-success/20">
-              Online
-            </Badge>
+            <div>
+              <h2 className="font-semibold text-foreground">DTE AI Assistant</h2>
+              <p className="text-xs text-muted-foreground">Ask me anything about technical education</p>
+            </div>
           </div>
+          <Badge variant="secondary" className="bg-success/10 text-success border-success/20">
+            Online
+          </Badge>
         </div>
+      </div>
 
-        {/* Messages */}
-        <ScrollArea className="flex-1 p-4">
-          <div className="space-y-4 max-w-4xl mx-auto">
-            {messages.map((message) => (
+      {/* Messages */}
+      <ScrollArea className="flex-1 p-4">
+        <div className="space-y-4 max-w-4xl mx-auto">
+          {messages.map((message) => (
+            <div
+              key={message.id}
+              className={`flex items-start space-x-3 ${
+                message.type === "user" ? "flex-row-reverse space-x-reverse" : ""
+              }`}
+            >
+              {/* Avatar */}
               <div
-                key={message.id}
-                className={`flex items-start space-x-3 ${
-                  message.type === "user" ? "flex-row-reverse space-x-reverse" : ""
+                className={`w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 ${
+                  message.type === "user" ? "bg-primary text-white" : "bg-gradient-primary text-white"
                 }`}
               >
-                <div className={`w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 ${
-                  message.type === "user" 
-                    ? "bg-primary text-white" 
-                    : "bg-gradient-primary text-white"
-                }`}>
-                  {message.type === "user" ? (
-                    <User className="w-4 h-4" />
-                  ) : (
-                    <Bot className="w-4 h-4" />
-                  )}
-                </div>
-                
-                <div className={`flex-1 ${message.type === "user" ? "text-right" : ""}`}>
-                  <div className={`inline-block max-w-[80%] p-3 rounded-lg ${
-                    message.type === "user"
-                      ? "bg-primary text-white"
-                      : "bg-white shadow-card border-0"
-                  }`}>
-                    <p className="text-sm whitespace-pre-wrap">{message.content}</p>
-                  </div>
-                  <div className="flex items-center space-x-2 mt-1">
-                    <Clock className="w-3 h-3 text-muted-foreground" />
-                    <span className="text-xs text-muted-foreground">
-                      {message.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                    </span>
-                  </div>
-                </div>
+                {message.type === "user" ? <User className="w-4 h-4" /> : <Bot className="w-4 h-4" />}
               </div>
-            ))}
-            <div ref={messagesEndRef} />
-          </div>
-        </ScrollArea>
 
-        {/* Input Area */}
-        <div className="p-4 border-t bg-white/80 backdrop-blur-sm">
-          <div className="max-w-4xl mx-auto">
-            <div className="flex items-end space-x-3">
-              <div className="flex-1">
-                <div className="relative">
-                  <Input
-                    value={inputMessage}
-                    onChange={(e) => setInputMessage(e.target.value)}
-                    onKeyPress={handleKeyPress}
-                    placeholder="Type your question about admissions, colleges, fees, scholarships..."
-                    className="pr-12 py-3 text-sm"
-                  />
-                  <button
-                    onClick={handleFileUpload}
-                    className="absolute right-3 top-3 text-muted-foreground hover:text-primary"
-                  >
-                    <Paperclip className="w-4 h-4" />
-                  </button>
-                  <input
-                    ref={fileInputRef}
-                    type="file"
-                    className="hidden"
-                    accept=".pdf,.doc,.docx,.jpg,.jpeg,.png"
-                    multiple
-                  />
+              {/* Message */}
+              <div className={`flex-1 ${message.type === "user" ? "text-right" : ""}`}>
+               <div
+  className={`inline-block w-full max-w-[100%] p-4 rounded-lg break-words ${
+    message.type === "user"
+      ? "bg-primary text-white ml-auto text-right"
+      : "bg-white shadow-lg border-0 mr-auto text-left"
+  }`}
+>
+  <p className="text-sm whitespace-pre-wrap">{message.content}</p>
+</div>
+
+                <div className="flex items-center space-x-2 mt-1">
+                  <Clock className="w-3 h-3 text-muted-foreground" />
+                  <span className="text-xs text-muted-foreground">
+                    {message.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                  </span>
                 </div>
               </div>
-              <Button 
-                onClick={handleSendMessage}
-                disabled={!inputMessage.trim()}
-                className="px-4 py-3"
-                variant="gradient"
-              >
-                <Send className="w-4 h-4" />
-              </Button>
             </div>
-            
-            <div className="text-xs text-muted-foreground mt-2 text-center">
-              AI can make mistakes. Please verify important information with official sources.
-            </div>
-          </div>
+          ))}
+          <div ref={messagesEndRef} />
         </div>
+      </ScrollArea>
+
+    {/* Input Area */}
+<div className="p-4 border-t bg-white/80 backdrop-blur-sm">
+  <div className="w-full max-w-20xl mx-auto flex items-center space-x-3">
+    {/* Input container */}
+    <div className="relative flex-1">
+      <Input
+        value={inputMessage}
+        onChange={(e) => setInputMessage(e.target.value)}
+        onKeyPress={handleKeyPress}
+        placeholder="Type your question about admissions, colleges, fees, scholarships..."
+        className="w-full pr-16 py-4 text-sm rounded-xl border border-border shadow-sm"
+      />
+
+      
+    </div>
+
+    {/* Send Button */}
+    <Button
+      onClick={handleSendMessage}
+      disabled={!inputMessage.trim()}
+      className="px-7.5 py-3 rounded-xl"
+      variant="gradient"
+    >
+      <Send className="w-5 h-5" />
+    </Button>
+  </div>
+</div>
+
+
+
+    </>
+  ) : (
+    // Guest view
+    <div className="flex-1 flex flex-col items-center justify-center p-4">
+      <h2 className="text-lg font-semibold text-foreground mb-2">
+        Please log in to chat with the AI Assistant
+      </h2>
+      <p className="text-sm text-muted-foreground mb-4">
+        Guest access is not allowed. You need an account to ask questions.
+      </p>
+      <Button onClick={() => navigate("/login")} variant="primary">
+        Go to Login
+      </Button>
+    </div>
+  )}
       </div>
     </div>
   );

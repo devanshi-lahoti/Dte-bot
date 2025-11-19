@@ -86,25 +86,69 @@ const CollegeRecommendation = () => {
   ];
 
   const streams = [
-    "Computer Engineering", "Information Technology", "Mechanical Engineering", 
+    "Computer Science", "Information Technology", "Mechanical Engineering", 
     "Electrical Engineering", "Civil Engineering", "Electronics Engineering",
     "Chemical Engineering", "Instrumentation Engineering"
   ];
 
-  const handleSearch = () => {
-    // Filter colleges based on form data
-    let filtered = sampleColleges.filter(college => {
-      const marksMatch = formData.marks[0] >= 60; // Assuming 60% minimum for these colleges
-      const locationMatch = !formData.location || college.location.toLowerCase().includes(formData.location.toLowerCase());
-      const streamMatch = !formData.stream || college.courses.some(course => course.toLowerCase().includes(formData.stream.toLowerCase()));
-      const budgetMatch = college.fees.max <= formData.budget[0];
-      
-      return marksMatch && locationMatch && streamMatch && budgetMatch;
+ const handleSearch = async () => {
+  try {
+    const token = localStorage.getItem("token");
+
+    // ✅ Build the correct filters object from formData
+    const filters = {
+      marks: formData.marks[0],
+      location: formData.location,
+      stream: formData.stream,
+      budget: formData.budget[0],
+      courseType: formData.courseType,
+      preferences: formData.preferences,
+    };
+
+    const response = await fetch("http://localhost:8080/colleges/recommend", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": token ? `Bearer ${token}` : "",
+      },
+      body: JSON.stringify(filters),
     });
 
-    setFilteredColleges(filtered);
-    setShowResults(true);
-  };
+    if (response.ok) {
+      const data = await response.json();
+
+      // Normalize backend data to frontend format
+      const transformedColleges = data.map((c) => ({
+        id: c.id,
+        name: c.collegeName,
+        location: c.location,
+        type: c.courseType || "Private",
+        rating: c.rating || 0,
+        fees: { min: c.budget || 0, max: c.budget || 0 },
+        placements: {
+          average: c.marks * 10000,
+          highest: c.marks * 15000,
+          percentage: Math.min(100, c.marks),
+        },
+        courses: [c.stream],
+        specializations: [c.preferences || "General"],
+        established: 2000 + (c.id % 20),
+        image:
+          "https://images.unsplash.com/photo-1562774053-701939374585?w=400",
+      }));
+
+      console.log("Transformed colleges:", transformedColleges);
+      setFilteredColleges(transformedColleges);
+      setShowResults(true);
+    } else {
+      console.error("Failed to fetch college data");
+    }
+  } catch (error) {
+    console.error("Error fetching colleges:", error);
+  }
+};
+
+
 
   const formatCurrency = (amount) => {
     return new Intl.NumberFormat('en-IN', {
@@ -222,7 +266,7 @@ const CollegeRecommendation = () => {
                     <SelectValue placeholder="Select course type" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="engineering">Engineering (B.Tech)</SelectItem>
+                    <SelectItem value="Engineering">Engineering (B.Tech)</SelectItem>
                     <SelectItem value="polytechnic">Polytechnic (Diploma)</SelectItem>
                     <SelectItem value="postgraduate">Post Graduate (M.Tech)</SelectItem>
                   </SelectContent>
