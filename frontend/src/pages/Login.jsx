@@ -49,12 +49,20 @@ const handleLogin = async (e) => {
     const { status, msg, data } = res.data;
 
     if (status && data?.token) {
-      const { firstName, role, token } = data;
+      const { id, firstName, role, token } = data;
 
       // 🟩 Save all details properly
       localStorage.setItem("token", token);
       localStorage.setItem("role", role);
-      localStorage.setItem("user", JSON.stringify({ firstName, role, token }));
+      localStorage.setItem(
+  "user",
+  JSON.stringify({
+    id,
+    firstName,
+    role,
+    token
+  })
+);
 
       toast.success(msg || "Login successful!");
       navigate("/dashboard");

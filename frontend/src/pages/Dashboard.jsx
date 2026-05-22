@@ -1,9 +1,7 @@
-import React from "react";
 import { Link, useNavigate } from "react-router-dom";
-
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
+
+import React, { useRef, useState, useEffect } from "react";
 import { 
   MessageSquare, 
   Search, 
@@ -22,43 +20,137 @@ import {
   BookOpen
 } from "lucide-react";
 
-const Dashboard = () => {
-  const role = localStorage.getItem("role") || "STUDENT"; // default to STUDENT if missing
+// Import the custom CSS
+import "../styles/dashboard.css";
 
- const navigate = useNavigate();
+const Dashboard = () => {
+  const fileInputRef = useRef(null);
+
+  const role = localStorage.getItem("role") || "STUDENT";
+
+const navigate = useNavigate();
+
+const token = localStorage.getItem("token");
 
 const handleLogout = () => {
   localStorage.removeItem("token");
   localStorage.removeItem("role");
   localStorage.removeItem("user");
+
   navigate("/login");
 };
 
+useEffect(() => {
+
+ const storedUser = JSON.parse(localStorage.getItem("user"));
+
+fetch(`http://localhost:8080/api/documents/${userId}`, {
+  headers: {
+    Authorization: `Bearer ${localStorage.getItem("token")}`,
+  },
+})
   
-  
-  // 🟩 Get user info from localStorage
-  const storedUser = localStorage.getItem("user");
-  let userName = "User";
-  let userRole = role;
-  
+    .then((res) => {
+      if (!res.ok) {
+        throw new Error("Failed to fetch documents");
+      }
+      return res.json();
+    })
+    .then((data) => {
+      setUploadedFiles(data);
+    })
+    .catch((err) => {
+      console.error(err);
+    });
+
+}, []);
+const [uploadedFiles, setUploadedFiles] = useState([]);
+
+const handleFileUpload = async (event) => {
+
+  const file = event.target.files[0];
+
+  if (!file) return;
+
+  const formData = new FormData();
+
+  formData.append("file", file);
+  formData.append("userId", userId);
+
+const user = JSON.parse(localStorage.getItem("user"));
+console.log(user);
+
 
   try {
-    if (storedUser) {
-      const parsed = JSON.parse(storedUser);
-      if (parsed.firstName) userName = parsed.firstName;
-      if (parsed.role) userRole = parsed.role;
-    }
-  } catch (err) {
-    console.error("Error parsing stored user:", err);
-  }
 
-  // ✅ Base services for student/parent
-  const commonServices = [
+    const response = await fetch(
+  "http://localhost:8080/api/documents/upload",
+  {
+
+    method: "POST",
+
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+
+    body: formData,
+
+  }
+);
+
+    if (!response.ok) {
+      throw new Error("Upload failed");
+    }
+
+    const data = await response.text();
+
+alert("File uploaded successfully!");
+
+console.log(data);
+
+setUploadedFiles((prev) => [...prev, file.name]);
+
+  } catch (error) {
+
+    console.error(error);
+
+    alert("File upload failed");
+  }
+};
+
+// Get logged in user
+const storedUser = localStorage.getItem("user");
+
+let userName = "User";
+let userRole = role;
+let userId = null;
+
+try {
+  if (storedUser) {
+    const parsed = JSON.parse(storedUser);
+
+    if (parsed.firstName) {
+      userName = parsed.firstName;
+    }
+
+    if (parsed.role) {
+      userRole = parsed.role;
+    }
+
+    if (parsed.id) {
+      userId = parsed.id;
+    }
+  }
+} catch (err) {
+  console.error("Error parsing user:", err);
+}
+  
+  const services = [
     {
       title: "Start Chat",
       description: "Get instant answers from our AI assistant",
       icon: MessageSquare,
-      color: "bg-gradient-primary",
+      color: "primary",
       link: "/chat",
       badge: "AI Powered"
     },
@@ -66,7 +158,7 @@ const handleLogout = () => {
       title: "College Finder",
       description: "Find the perfect college for your goals",
       icon: Search,
-      color: "bg-gradient-secondary",
+      color: "secondary",
       link: "/college-finder",
       badge: "Popular"
     },
@@ -74,7 +166,7 @@ const handleLogout = () => {
       title: "Admission Info",
       description: "Complete admission process guidance",
       icon: GraduationCap,
-      color: "bg-accent",
+      color: "accent",
       link: "/admission-fees",
       badge: null
     },
@@ -82,7 +174,7 @@ const handleLogout = () => {
       title: "Fee Structure",
       description: "Detailed fee information for all courses",
       icon: DollarSign,
-      color: "bg-success",
+      color: "success",
       link: "/admission-fees",
       badge: null
     },
@@ -90,7 +182,7 @@ const handleLogout = () => {
       title: "Scholarships",
       description: "Discover available scholarship opportunities",
       icon: Award,
-      color: "bg-warning",
+      color: "warning",
       link: "/scholarships-placement",
       badge: "Updated"
     },
@@ -98,58 +190,29 @@ const handleLogout = () => {
       title: "Placement Info",
       description: "Placement records and career guidance",
       icon: TrendingUp,
-      color: "bg-secondary",
+      color: "secondary",
       link: "/scholarships-placement",
       badge: null
     },
     {
-      title: "My Documents",
-      description: "Manage your uploaded documents",
-      icon: FileText,
-      color: "bg-muted",
-      link: "#",
-      badge: null
-    },
+  title: "My Documents",
+  description: "Upload and manage documents",
+  icon: FileText,
+  color: "muted",
+  action: "upload",
+  badge: null
+},
     {
       title: "Query History",
       description: "View your past conversations",
       icon: History,
-      color: "bg-primary",
+      color: "primary",
       link: "/query-history",
       badge: null
     },
   ];
 
-  // ✅ Admin-specific services (optional)
-  const adminServices = [
-    {
-      title: "Manage Users",
-      description: "View and manage all registered users",
-      icon: Users,
-      color: "bg-primary",
-      link: "#",
-      badge: "Admin"
-    },
-    {
-      title: "System Analytics",
-      description: "Monitor app usage and performance",
-      icon: TrendingUp,
-      color: "bg-success",
-      link: "#",
-      badge: "Reports"
-    },
-    {
-      title: "Chat Overview",
-      description: "View overall chat statistics",
-      icon: MessageSquare,
-      color: "bg-warning",
-      link: "#",
-      badge: "Admin"
-    },
-  ];
-
-  // ✅ Choose services dynamically
-  const services = role === "ADMIN" ? adminServices : commonServices;
+  
 
   const recentActivity = [
     { type: "chat", title: "Asked about MBA admission criteria", time: "2 hours ago" },
@@ -164,220 +227,319 @@ const handleLogout = () => {
   ];
 
   return (
-    
-    <div className="min-h-screen bg-gradient-to-br from-background via-muted/30 to-background">
+    <div className="dashboard-container">
       {/* Header */}
-      <header className="border-b bg-white/80 backdrop-blur-sm sticky top-0 z-50">
-        <div className="container mx-auto px-4 py-4">
+      <header className="dashboard-header">
+        <div className="header-content">
           <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-3">
-              <div className="w-10 h-10 bg-gradient-primary rounded-xl flex items-center justify-center">
+            <div className="header-brand">
+              <div className="brand-icon">
                 <GraduationCap className="w-5 h-5 text-white" />
               </div>
-              <div>
-                <h1 className="text-lg font-bold text-foreground">DTE AI Assistant</h1>
-                <p className="text-xs text-muted-foreground">Dashboard</p>
+              <div className="brand-text">
+                <h1>DTE AI Assistant</h1>
+                <p>Dashboard</p>
               </div>
             </div>
-            <div className="flex items-center space-x-3">
+            <div className="header-actions">
               <Button variant="ghost" size="sm">
                 <Bell className="w-4 h-4" />
               </Button>
               <Button variant="ghost" size="sm">
                 <Settings className="w-4 h-4" />
               </Button>
-              <Button 
-  variant="ghost" 
-  size="sm" 
-  onClick={handleLogout}
-  title="Logout"
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={handleLogout}
 >
-  <LogOut className="w-4 h-4" />
-</Button>
-
+                <LogOut className="w-4 h-4" />
+              </Button>
             </div>
           </div>
         </div>
       </header>
 
-      <div className="container mx-auto px-4 py-8">
+      <div className="main-content">
         {/* Welcome Section */}
-        <div className="mb-8">
-          <div className="flex items-center justify-between mb-4">
-            <div>
-            <h1>Hello, {userName}!</h1>
-              <p>Welcome to your {userRole} dashboard.</p>
-
+        <div className="welcome-section">
+          <div className="welcome-header">
+            <div className="welcome-text">
+              <h1>Welcome back, {userName}! 👋</h1>
+              <p>Ready to continue your educational journey? Let's help you find what you need.</p>
             </div>
-            <Badge variant="secondary" className="hidden md:flex capitalize">
-              <Users className="w-3 h-3 mr-1" />
-              {role.charAt(0) + role.slice(1).toLowerCase()}
-            </Badge>
+            <div className="user-badge">
+              <Users className="w-3 h-3" />
+              {userRole}
+            </div>
           </div>
-
+          
           {/* Quick Stats */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-            <Card className="p-4 shadow-card border-0">
-              <div className="flex items-center space-x-3">
-                <div className="w-10 h-10 bg-primary/10 rounded-lg flex items-center justify-center">
-                  <MessageSquare className="w-5 h-5 text-primary" />
+          <div className="stats-grid">
+            <div className="stat-card">
+              <div className="stat-content">
+                <div className="stat-icon primary">
+                  <MessageSquare className="w-5 h-5" />
                 </div>
-                <div>
-                  <div className="text-lg font-bold text-foreground">24</div>
-                  <div className="text-xs text-muted-foreground">Chat Sessions</div>
-                </div>
-              </div>
-            </Card>
-            <Card className="p-4 shadow-card border-0">
-              <div className="flex items-center space-x-3">
-                <div className="w-10 h-10 bg-secondary/10 rounded-lg flex items-center justify-center">
-                  <BookOpen className="w-5 h-5 text-secondary" />
-                </div>
-                <div>
-                  <div className="text-lg font-bold text-foreground">12</div>
-                  <div className="text-xs text-muted-foreground">Colleges Saved</div>
+                <div className="stat-info">
+                  <div className="stat-value">24</div>
+                  <div className="stat-label">Chat Sessions</div>
                 </div>
               </div>
-            </Card>
-            <Card className="p-4 shadow-card border-0">
-              <div className="flex items-center space-x-3">
-                <div className="w-10 h-10 bg-accent/10 rounded-lg flex items-center justify-center">
-                  <Award className="w-5 h-5 text-accent" />
+            </div>
+            <div className="stat-card">
+              <div className="stat-content">
+                <div className="stat-icon secondary">
+                  <BookOpen className="w-5 h-5" />
                 </div>
-                <div>
-                  <div className="text-lg font-bold text-foreground">8</div>
-                  <div className="text-xs text-muted-foreground">Scholarships</div>
-                </div>
-              </div>
-            </Card>
-            <Card className="p-4 shadow-card border-0">
-              <div className="flex items-center space-x-3">
-                <div className="w-10 h-10 bg-success/10 rounded-lg flex items-center justify-center">
-                  <FileText className="w-5 h-5 text-success" />
-                </div>
-                <div>
-                  <div className="text-lg font-bold text-foreground">6</div>
-                  <div className="text-xs text-muted-foreground">Documents</div>
+                <div className="stat-info">
+                  <div className="stat-value">12</div>
+                  <div className="stat-label">Colleges Saved</div>
                 </div>
               </div>
-            </Card>
+            </div>
+            <div className="stat-card">
+              <div className="stat-content">
+                <div className="stat-icon accent">
+                  <Award className="w-5 h-5" />
+                </div>
+                <div className="stat-info">
+                  <div className="stat-value">8</div>
+                  <div className="stat-label">Scholarships</div>
+                </div>
+              </div>
+            </div>
+            <div className="stat-card">
+              <div className="stat-content">
+                <div className="stat-icon success">
+                  <FileText className="w-5 h-5" />
+                </div>
+                <div className="stat-info">
+                  <div className="stat-value">6</div>
+                  <div className="stat-label">Documents</div>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
 
-        <div className="grid lg:grid-cols-3 gap-8">
+        <div className="dashboard-grid">
           {/* Main Services */}
-          <div className="lg:col-span-2">
-            <h2 className="text-xl font-bold text-foreground mb-6">Services</h2>
-            <div className="grid md:grid-cols-2 gap-4">
-              {services.map((service, index) => (
-                <Link key={index} to={service.link}>
-                  <Card className="p-6 hover:shadow-elevated transition-all duration-300 hover:-translate-y-1 border-0 shadow-card group cursor-pointer">
-                    <CardContent className="p-0">
-                      <div className="flex items-start justify-between mb-4">
-                        <div className={`w-12 h-12 ${service.color} rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform`}>
-                          <service.icon className="w-6 h-6 text-white" />
-                        </div>
-                        {service.badge && (
-                          <Badge variant="secondary" className="text-xs">
-                            {service.badge}
-                          </Badge>
-                        )}
-                      </div>
-                      <div className="space-y-2">
-                        <h3 className="text-lg font-semibold text-foreground group-hover:text-primary transition-colors">
-                          {service.title}
-                        </h3>
-                        <p className="text-sm text-muted-foreground">{service.description}</p>
-                      </div>
-                      <ChevronRight className="w-4 h-4 text-muted-foreground group-hover:text-primary group-hover:translate-x-1 transition-all mt-3" />
-                    </CardContent>
-                  </Card>
-                </Link>
-              ))}
+          <div className="services-section">
+            <h2 className="services-title">Services</h2>
+            <div className="services-grid">
+             {services.map((service, index) => {
+
+  const cardContent = (
+    <div className="service-card">
+
+      <div className="service-header">
+        <div className={`service-icon ${service.color}`}>
+          <service.icon className="w-6 h-6" />
+        </div>
+
+        {service.badge && (
+          <div className="service-badge">
+            {service.badge}
+          </div>
+        )}
+      </div>
+
+      <div className="service-content">
+        <h3 className="service-title">
+          {service.title}
+        </h3>
+
+        <p className="service-description">
+          {service.description}
+        </p>
+      </div>
+
+      <ChevronRight className="service-arrow w-4 h-4 mt-3" />
+    </div>
+  );
+
+  return service.action === "upload" ? (
+
+    <div
+      key={index}
+      onClick={() => fileInputRef.current?.click()}
+      style={{ cursor: "pointer" }}
+    >
+      {cardContent}
+    </div>
+
+  ) : (
+
+    <Link key={index} to={service.link}>
+      {cardContent}
+    </Link>
+
+  );
+})}
             </div>
           </div>
 
           {/* Sidebar */}
-          {/* (unchanged below) */}
-          <div className="space-y-6">
-            {/* Recent Activity */}
-            <Card className="shadow-card border-0">
-              <CardHeader className="pb-3">
-                <CardTitle className="text-lg flex items-center">
-                  <Clock className="w-5 h-5 mr-2 text-primary" />
-                  Recent Activity
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                {recentActivity.map((activity, index) => (
-                  <div key={index} className="flex items-start space-x-3 p-3 rounded-lg bg-muted/30">
-                    <div className="w-8 h-8 bg-primary/10 rounded-lg flex items-center justify-center flex-shrink-0">
-                      {activity.type === "chat" && <MessageSquare className="w-4 h-4 text-primary" />}
-                      {activity.type === "search" && <Search className="w-4 h-4 text-primary" />}
-                      {activity.type === "document" && <FileText className="w-4 h-4 text-primary" />}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium text-foreground">{activity.title}</p>
-                      <p className="text-xs text-muted-foreground">{activity.time}</p>
-                    </div>
-                  </div>
-                ))}
-                <Button variant="ghost" className="w-full text-sm">
-                  View All Activity
-                </Button>
-              </CardContent>
-            </Card>
+<div className="sidebar">
 
-            {/* Notifications */}
-            <Card className="shadow-card border-0">
-              <CardHeader className="pb-3">
-                <CardTitle className="text-lg flex items-center">
-                  <Bell className="w-5 h-5 mr-2 text-accent" />
-                  Notifications
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                {notifications.map((notification, index) => (
-                  <div key={index} className="p-3 rounded-lg bg-muted/30">
-                    <div className="flex items-start justify-between">
-                      <div className="flex-1">
-                        <p className="text-sm font-medium text-foreground">{notification.title}</p>
-                        <p className="text-xs text-muted-foreground">{notification.time}</p>
-                      </div>
-                      <div
-                        className={`w-2 h-2 rounded-full flex-shrink-0 mt-2 ${
-                          notification.type === "info"
-                            ? "bg-primary"
-                            : notification.type === "warning"
-                            ? "bg-warning"
-                            : "bg-destructive"
-                        }`}
-                      />
-                    </div>
-                  </div>
-                ))}
-                <Button variant="ghost" className="w-full text-sm">
-                  View All Notifications
-                </Button>
-              </CardContent>
-            </Card>
+  {/* Recent Activity */}
+  <div className="sidebar-card">
+    <div className="sidebar-card-header">
+      <h3 className="sidebar-card-title">
+        <Clock className="w-5 h-5" />
+        Recent Activity
+      </h3>
+    </div>
 
-            {/* Quick Actions */}
-            <Card className="shadow-card border-0 bg-gradient-primary text-white">
-              <CardContent className="p-6">
-                <h3 className="text-lg font-semibold mb-3">Need Help?</h3>
-                <p className="text-sm opacity-90 mb-4">
-                  Our AI assistant is here to answer any questions you might have.
-                </p>
-                <Link to="/chat">
-                  <Button variant="secondary" className="w-full">
-                    <MessageSquare className="w-4 h-4 mr-2" />
-                    Start Chat
-                  </Button>
-                </Link>
-              </CardContent>
-            </Card>
+    <div className="sidebar-card-content">
+      {recentActivity.map((activity, index) => (
+        <div key={index} className="activity-item">
+
+          <div className="activity-icon">
+            {activity.type === "chat" && (
+              <MessageSquare className="w-4 h-4" />
+            )}
+
+            {activity.type === "search" && (
+              <Search className="w-4 h-4" />
+            )}
+
+            {activity.type === "document" && (
+              <FileText className="w-4 h-4" />
+            )}
           </div>
+
+          <div className="activity-content">
+            <p className="activity-title">{activity.title}</p>
+            <p className="activity-time">{activity.time}</p>
+          </div>
+
+        </div>
+      ))}
+
+      <Button variant="ghost" className="w-full text-sm">
+        View All Activity
+      </Button>
+    </div>
+  </div>
+
+  {/* Notifications */}
+  <div className="sidebar-card">
+    <div className="sidebar-card-header">
+      <h3 className="sidebar-card-title">
+        <Bell className="w-5 h-5" />
+        Notifications
+      </h3>
+    </div>
+
+    <div className="sidebar-card-content">
+      {notifications.map((notification, index) => (
+        <div key={index} className="notification-item">
+
+          <div className="notification-header">
+
+            <div className="notification-content">
+              <p className="notification-title">
+                {notification.title}
+              </p>
+
+              <p className="notification-time">
+                {notification.time}
+              </p>
+            </div>
+
+            <div
+              className={`notification-indicator ${notification.type}`}
+            />
+
+          </div>
+
+        </div>
+      ))}
+
+      <Button variant="ghost" className="w-full text-sm">
+        View All Notifications
+      </Button>
+    </div>
+  </div>
+
+  {/* Uploaded Documents */}
+  <div className="sidebar-card">
+
+    <div className="sidebar-card-header">
+      <h3 className="sidebar-card-title">
+        <FileText className="w-5 h-5" />
+        Uploaded Documents
+      </h3>
+    </div>
+
+    <div className="sidebar-card-content">
+
+      {uploadedFiles.length === 0 ? (
+
+        <p className="text-sm text-gray-500">
+          No documents uploaded yet
+        </p>
+
+      ) : (
+
+        uploadedFiles.map((file, index) => (
+
+          <a
+            key={index}
+            href={`http://localhost:8080/api/documents/download/${file.id}`}
+            target="_blank"
+            rel="noreferrer"
+            className="block p-2 hover:bg-gray-100 rounded text-sm"
+          >
+            {file.fileName}
+          </a>
+
+        ))
+
+      )}
+
+    </div>
+  </div>
+
+  {/* Help Card */}
+  <div className="help-card">
+
+    <h3 className="help-title">
+      Need Help?
+    </h3>
+
+    <p className="help-description">
+      Our AI assistant is here to answer any questions you might have.
+    </p>
+
+    <Link to="/chat">
+
+      <Button
+        variant="secondary"
+        className="help-button"
+      >
+        <MessageSquare className="w-4 h-4" />
+        Start Chat
+      </Button>
+
+    </Link>
+
+  </div>
+
+</div>
+
+            
+
+
+          <input
+  ref={fileInputRef}
+  type="file"
+  className="hidden"
+  accept=".pdf,.doc,.docx,.jpg,.jpeg,.png"
+  onChange={handleFileUpload}
+/>
         </div>
       </div>
     </div>
